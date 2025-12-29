@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화학 원소 주기율표</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 3px;
+            margin-bottom: 30px;
+        }
+        
+        .element {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 5px;
+            position: relative;
+        }
+        
+        .element:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .atomic-number {
+            font-size: 0.7em;
+            font-weight: bold;
+            position: absolute;
+            top: 2px;
+            left: 4px;
+        }
+        
+        .symbol {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .name {
+            font-size: 0.6em;
+            text-align: center;
+        }
+        
+        .mass {
+            font-size: 0.55em;
+            color: #666;
+        }
+        
+        .empty {
+            background: transparent;
+            border: none;
+        }
+        
+        .alkali { background: #ffb3ba; }
+        .alkaline { background: #ffdab9; }
+        .transition { background: #ffdfba; }
+        .post-transition { background: #ffffba; }
+        .metalloid { background: #baffc9; }
+        .nonmetal { background: #bae1ff; }
+        .halogen { background: #ddbafe; }
+        .noble { background: #ffb3e6; }
+        .lanthanide { background: #ffccf9; }
+        .actinide { background: #ffd4e5; }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #999;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .modal-info {
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .close-btn {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        @media (max-width: 768px) {
+            .periodic-table {
+                gap: 2px;
+            }
+            .symbol {
+                font-size: 1em;
+            }
+            .name {
+                font-size: 0.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚛️ 화학 원소 주기율표</h1>
+        <p class="subtitle">Interactive Periodic Table of Elements</p>
+        
+        <div class="qr-section">
+            <h3 style="margin-bottom: 15px;">📱 QR 코드 생성하기</h3>
+            <input type="text" id="urlInput" placeholder="웹사이트 URL을 입력하세요" 
+                   style="width: 80%; max-width: 500px; padding: 12px; font-size: 1em; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px;">
+            <button onclick="generateQR()" style="display: block; margin: 15px auto; padding: 12px 30px; font-size: 1em; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">QR 코드 생성</button>
+            <div id="qrcode"></div>
+            <p style="margin-top: 15px; color: #666;">URL을 입력하고 버튼을 눌러 QR 코드를 생성하세요</p>
+        </div>
+        
+        <div class="periodic-table" id="periodicTable"></div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color alkali"></div><span>알칼리 금속</span></div>
+            <div class="legend-item"><div class="legend-color alkaline"></div><span>알칼리 토금속</span></div>
+            <div class="legend-item"><div class="legend-color transition"></div><span>전이 금속</span></div>
+            <div class="legend-item"><div class="legend-color post-transition"></div><span>전이후 금속</span></div>
+            <div class="legend-item"><div class="legend-color metalloid"></div><span>준금속</span></div>
+            <div class="legend-item"><div class="legend-color nonmetal"></div><span>비금속</span></div>
+            <div class="legend-item"><div class="legend-color halogen"></div><span>할로겐</span></div>
+            <div class="legend-item"><div class="legend-color noble"></div><span>비활성 기체</span></div>
+        </div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">×</span>
+            <div class="modal-header" id="modalHeader"></div>
+            <div class="modal-info" id="modalInfo"></div>
+        </div>
+    </div>
+    
+    <script>
+        const elements = [
+            {num: 1, symbol: 'H', name: '수소', mass: '1.008', type: 'nonmetal', pos: [1, 1]},
+            {num: 2, symbol: 'He', name: '헬륨', mass: '4.003', type: 'noble', pos: [1, 18]},
+            {num: 3, symbol: 'Li', name: '리튬', mass: '6.941', type: 'alkali', pos: [2, 1]},
+            {num: 4, symbol: 'Be', name: '베릴륨', mass: '9.012', type: 'alkaline', pos: [2, 2]},
+            {num: 5, symbol: 'B', name: '붕소', mass: '10.81', type: 'metalloid', pos: [2, 13]},
+            {num: 6, symbol: 'C', name: '탄소', mass: '12.01', type: 'nonmetal', pos: [2, 14]},
+            {num: 7, symbol: 'N', name: '질소', mass: '14.01', type: 'nonmetal', pos: [2, 15]},
+            {num: 8, symbol: 'O', name: '산소', mass: '16.00', type: 'nonmetal', pos: [2, 16]},
+            {num: 9, symbol: 'F', name: '플루오린', mass: '19.00', type: 'halogen', pos: [2, 17]},
+            {num: 10, symbol: 'Ne', name: '네온', mass: '20.18', type: 'noble', pos: [2, 18]},
+            {num: 11, symbol: 'Na', name: '나트륨', mass: '22.99', type: 'alkali', pos: [3, 1]},
+            {num: 12, symbol: 'Mg', name: '마그네슘', mass: '24.31', type: 'alkaline', pos: [3, 2]},
+            {num: 13, symbol: 'Al', name: '알루미늄', mass: '26.98', type: 'post-transition', pos: [3, 13]},
+            {num: 14, symbol: 'Si', name: '규소', mass: '28.09', type: 'metalloid', pos: [3, 14]},
+            {num: 15, symbol: 'P', name: '인', mass: '30.97', type: 'nonmetal', pos: [3, 15]},
+            {num: 16, symbol: 'S', name: '황', mass: '32.07', type: 'nonmetal', pos: [3, 16]},
+            {num: 17, symbol: 'Cl', name: '염소', mass: '35.45', type: 'halogen', pos: [3, 17]},
+            {num: 18, symbol: 'Ar', name: '아르곤', mass: '39.95', type: 'noble', pos: [3, 18]},
+            {num: 19, symbol: 'K', name: '칼륨', mass: '39.10', type: 'alkali', pos: [4, 1]},
+            {num: 20, symbol: 'Ca', name: '칼슘', mass: '40.08', type: 'alkaline', pos: [4, 2]},
+            {num: 21, symbol: 'Sc', name: '스칸듐', mass: '44.96', type: 'transition', pos: [4, 3]},
+            {num: 22, symbol: 'Ti', name: '타이타늄', mass: '47.87', type: 'transition', pos: [4, 4]},
+            {num: 23, symbol: 'V', name: '바나듐', mass: '50.94', type: 'transition', pos: [4, 5]},
+            {num: 24, symbol: 'Cr', name: '크로뮴', mass: '52.00', type: 'transition', pos: [4, 6]},
+            {num: 25, symbol: 'Mn', name: '망가니즈', mass: '54.94', type: 'transition', pos: [4, 7]},
+            {num: 26, symbol: 'Fe', name: '철', mass: '55.85', type: 'transition', pos: [4, 8]},
+            {num: 27, symbol: 'Co', name: '코발트', mass: '58.93', type: 'transition', pos: [4, 9]},
+            {num: 28, symbol: 'Ni', name: '니켈', mass: '58.69', type: 'transition', pos: [4, 10]},
+            {num: 29, symbol: 'Cu', name: '구리', mass: '63.55', type: 'transition', pos: [4, 11]},
+            {num: 30, symbol: 'Zn', name: '아연', mass: '65.38', type: 'transition', pos: [4, 12]},
+            {num: 31, symbol: 'Ga', name: '갈륨', mass: '69.72', type: 'post-transition', pos: [4, 13]},
+            {num: 32, symbol: 'Ge', name: '저마늄', mass: '72.63', type: 'metalloid', pos: [4, 14]},
+            {num: 33, symbol: 'As', name: '비소', mass: '74.92', type: 'metalloid', pos: [4, 15]},
+            {num: 34, symbol: 'Se', name: '셀레늄', mass: '78.96', type: 'nonmetal', pos: [4, 16]},
+            {num: 35, symbol: 'Br', name: '브로민', mass: '79.90', type: 'halogen', pos: [4, 17]},
+            {num: 36, symbol: 'Kr', name: '크립톤', mass: '83.80', type: 'noble', pos: [4, 18]},
+        ];
+        
+        // QR 코드 생성 함수
+        let qrcode = null;
+        
+        function generateQR() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) {
+                alert('URL을 입력해주세요!');
+                return;
+            }
+            
+            const qrcodeDiv = document.getElementById("qrcode");
+            qrcodeDiv.innerHTML = ''; // 기존 QR 코드 제거
+            
+            qrcode = new QRCode(qrcodeDiv, {
+                text: url,
+                width: 200,
+                height: 200,
+                colorDark: "#5468ff",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // 주기율표 그리드 생성 (7행 x 18열)
+        const table = document.getElementById('periodicTable');
+        for (let row = 1; row <= 7; row++) {
+            for (let col = 1; col <= 18; col++) {
+                const element = elements.find(e => e.pos[0] === row && e.pos[1] === col);
+                const cell = document.createElement('div');
+                
+                if (element) {
+                    cell.className = `element ${element.type}`;
+                    cell.innerHTML = `
+                        <div class="atomic-number">${element.num}</div>
+                        <div class="symbol">${element.symbol}</div>
+                        <div class="name">${element.name}</div>
+                        <div class="mass">${element.mass}</div>
+                    `;
+                    cell.onclick = () => showModal(element);
+                } else {
+                    cell.className = 'element empty';
+                }
+                
+                table.appendChild(cell);
+            }
+        }
+        
+        function showModal(element) {
+            const modal = document.getElementById('modal');
+            const header = document.getElementById('modalHeader');
+            const info = document.getElementById('modalInfo');
+            
+            header.innerHTML = `${element.symbol} - ${element.name}`;
+            info.innerHTML = `
+                <p><strong>원자 번호:</strong> ${element.num}</p>
+                <p><strong>원소 기호:</strong> ${element.symbol}</p>
+                <p><strong>한글 명:</strong> ${element.name}</p>
+                <p><strong>원자량:</strong> ${element.mass}</p>
+                <p><strong>분류:</strong> ${getTypeName(element.type)}</p>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+        
+        function getTypeName(type) {
+            const types = {
+                'alkali': '알칼리 금속',
+                'alkaline': '알칼리 토금속',
+                'transition': '전이 금속',
+                'post-transition': '전이후 금속',
+                'metalloid': '준금속',
+                'nonmetal': '비금속',
+                'halogen': '할로겐',
+                'noble': '비활성 기체'
+            };
+            return types[type] || type;
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
